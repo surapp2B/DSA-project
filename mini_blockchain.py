@@ -98,9 +98,25 @@ class BlockchainGUI:
     
     def tamper_block(self):
         if len(self.blockchain.chain) > 1:
-            self.blockchain.chain[1].data = "Tampered data!"
+            # Get reference to the block we're tampering with
+            tampered_block = self.blockchain.chain[1]
+            
+            # Modify multiple properties
+            tampered_block.data = "Tampered data!"
+            tampered_block.timestamp = datetime.now()  # Update timestamp
+            
+            # Force recomputation of the hash (but don't fix previous_hash chain)
+            tampered_block.hash = tampered_block.compute_hash()
+            
+            # After tampering with block 1
+            if len(self.blockchain.chain) > 2:
+                # Make next block's previous_hash match the new invalid hash
+                self.blockchain.chain[2].previous_hash = tampered_block.hash
+                self.blockchain.chain[2].hash = self.blockchain.chain[2].compute_hash()
+            
             self.update_display()
-            messagebox.showwarning("Tamper Alert", "Block 1 data modified!")
+            messagebox.showwarning("Tamper Alert", "Block 1 data and timestamp modified!\n"
+                                  "Hash recalculated with invalid previous_hash reference!")
     
     def update_display(self):
         self.chain_display.delete(1.0, tk.END)
